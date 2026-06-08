@@ -33,3 +33,25 @@ class SessionState(BaseModel):
     transcript: str = ""
     last_question: str | None = None
     last_answer: str | None = None
+
+
+class KnowledgeTextRequest(BaseModel):
+    title: str = Field(default="profile")
+    text: str
+    source_type: str = Field(default="profile")
+
+
+class KnowledgeItem(BaseModel):
+    id: str
+    title: str
+    source_type: str
+    preview: str
+
+
+class KnowledgeIngestResponse(BaseModel):
+    status: str
+    chunks: int
+
+
+class KnowledgeListResponse(BaseModel):
+    items: list[KnowledgeItem]

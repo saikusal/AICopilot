@@ -1,4 +1,12 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    restart: unless-stopped
+    expose:
+      - "6333"
+    volumes:
+      - qdrant:/qdrant/storage
+
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
@@ -40,6 +48,8 @@ services:
     depends_on:
       ollama-pull:
         condition: service_completed_successfully
+      qdrant:
+        condition: service_started
     restart: unless-stopped
     expose:
       - "8000"
@@ -74,3 +84,4 @@ services:
 
 volumes:
   ollama:
+  qdrant:

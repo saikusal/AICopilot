@@ -14,6 +14,7 @@ Mobile-first web MVP for a phone-based interview copilot.
 - Manual text test box
 - Docker Compose deployment for a basic EC2 instance
 - Local no-API mode with Faster Whisper and Ollama/Qwen on a GPU EC2 instance
+- Local RAG with Qdrant and sentence-transformers for resume/project context
 
 ## Local Run
 
@@ -109,6 +110,23 @@ Then:
 ```bash
 docker compose up -d --build
 docker compose exec ollama ollama pull qwen2.5:7b-instruct
+```
+
+RAG runs through Qdrant:
+
+```env
+RAG_ENABLED=true
+QDRANT_URL=http://qdrant:6333
+EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+RAG_TOP_K=4
+```
+
+Paste resume/project context in the app's `Knowledge` section, or ingest from the server:
+
+```bash
+curl -X POST http://localhost/api/knowledge/text \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Resume","source_type":"resume","text":"Paste resume text here"}'
 ```
 
 Full GPU EC2 instructions:

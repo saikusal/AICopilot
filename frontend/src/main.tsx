@@ -10,7 +10,15 @@ import {
   Scissors,
   Square
 } from "lucide-react";
-import { CopilotResponse, resetSession, sendAudioChunk, sendText } from "./api";
+import {
+  CopilotResponse,
+  KnowledgeItem,
+  addKnowledge,
+  listKnowledge,
+  resetSession,
+  sendAudioChunk,
+  sendText
+} from "./api";
 import "./styles.css";
 
 type Status = "idle" | "listening" | "paused" | "processing" | "error";
@@ -38,8 +46,13 @@ function App() {
   const [message, setMessage] = useState("Tap Listen when the interviewer starts speaking.");
   const [error, setError] = useState("");
   const [manualText, setManualText] = useState("");
+  const [knowledgeTitle, setKnowledgeTitle] = useState("Resume and projects");
+  const [knowledgeText, setKnowledgeText] = useState("");
+  const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItem[]>([]);
+  const [knowledgeMessage, setKnowledgeMessage] = useState("");
 
   useEffect(() => {
+    loadKnowledge();
     return () => stopListening();
   }, []);
 
@@ -167,6 +180,31 @@ function App() {
     setError("");
   }
 
+  async function loadKnowledge() {
+    try {
+      const items = await listKnowledge();
+      setKnowledgeItems(items);
+    } catch {
+      setKnowledgeItems([]);
+    }
+  }
+
+  async function saveKnowledge() {
+    if (!knowledgeText.trim()) {
+      setKnowledgeMessage("Paste resume or project notes first.");
+      return;
+    }
+    setKnowledgeMessage("Indexing knowledge...");
+    try {
+      const result = await addKnowledge(knowledgeTitle || "Resume and projects", knowledgeText, "profile");
+      setKnowledgeText("");
+      setKnowledgeMessage(`Saved ${result.chunks} chunks for RAG.`);
+      await loadKnowledge();
+    } catch (err) {
+      setKnowledgeMessage(err instanceof Error ? err.message : "Knowledge save failed");
+    }
+  }
+
   const statusLabel = status === "processing" ? "processing" : status;
 
   return (
@@ -249,6 +287,35 @@ function App() {
         <button onClick={() => submitManual()}>
           <Send size={17} /> Ask
         </button>
+      </section>
+
+      <section className="panel knowledgePanel">
+        <div className="panelHeader">
+          <h2>Knowledge</h2>
+          <span>{knowledgeItems.length} sources</span>
+        </div>
+        <input
+          value={knowledgeTitle}
+          onChange={(event) => setKnowledgeTitle(event.target.value)}
+          placeholder="Title"
+        />
+        <textarea
+          value={knowledgeText}
+          onChange={(event) => setKnowledgeText(event.target.value)}
+          placeholder="Paste resume, project details, HR notes, or target role context..."
+          rows={5}
+        />
+        <button onClick={saveKnowledge}>Save to RAG</button>
+        {knowledgeMessage && <p className="knowledgeMessage">{knowledgeMessage}</p>}
+        {knowledgeItems.length > 0 && (
+          <div className="knowledgeList">
+            {knowledgeItems.slice(0, 3).map((item) => (
+              <p key={item.id}>
+                <strong>{item.title}</strong>: {item.preview}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
 
       <nav className="bottomNav">

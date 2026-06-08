@@ -238,6 +238,63 @@ h2 {
   font-weight: 700;
 }
 
+.knowledgePanel {
+  background: #15181f;
+}
+
+.knowledgePanel input,
+.knowledgePanel textarea {
+  width: 100%;
+  border: 1px solid #2a3239;
+  border-radius: 8px;
+  background: #11161b;
+  color: #eef2f6;
+  padding: 11px 12px;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+.knowledgePanel textarea {
+  resize: vertical;
+}
+
+.knowledgePanel input:focus,
+.knowledgePanel textarea:focus {
+  border-color: #4f8cff;
+}
+
+.knowledgePanel > button {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 8px;
+  background: #e0e7ff;
+  color: #111827;
+  font-weight: 750;
+}
+
+.knowledgeMessage {
+  margin-top: 10px;
+  color: #cbd5df;
+  font-size: 0.86rem;
+}
+
+.knowledgeList {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.knowledgeList p {
+  color: #aeb9c4;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.knowledgeList strong {
+  color: #eef2f6;
+}
+
 .bottomNav {
   position: fixed;
   left: 50%;

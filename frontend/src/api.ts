@@ -52,3 +52,31 @@ export async function sendText(
 export async function resetSession(sessionId: string): Promise<void> {
   await fetch(`${API_BASE}/api/session/${sessionId}/reset`, { method: "POST" });
 }
+
+export type KnowledgeItem = {
+  id: string;
+  title: string;
+  source_type: string;
+  preview: string;
+};
+
+export async function addKnowledge(title: string, text: string, sourceType = "profile"): Promise<{ chunks: number }> {
+  const response = await fetch(`${API_BASE}/api/knowledge/text`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, text, source_type: sourceType })
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function listKnowledge(): Promise<KnowledgeItem[]> {
+  const response = await fetch(`${API_BASE}/api/knowledge`);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  const data = await response.json();
+  return data.items || [];
+}

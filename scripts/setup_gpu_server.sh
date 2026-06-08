@@ -59,6 +59,11 @@ updates = {
     "LLM_PROVIDER": "ollama",
     "OLLAMA_BASE_URL": "http://ollama:11434",
     "OLLAMA_MODEL": "qwen2.5:7b-instruct",
+    "RAG_ENABLED": "true",
+    "QDRANT_URL": "http://qdrant:6333",
+    "QDRANT_COLLECTION": "interview_knowledge",
+    "EMBEDDING_MODEL": "BAAI/bge-small-en-v1.5",
+    "RAG_TOP_K": "4",
 }
 seen = set()
 new_lines = []

@@ -3,7 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .llm import generate_answer
-from .models import AnswerRequest, AnswerResponse, SessionState
+from .models import (
+    AnswerRequest,
+    AnswerResponse,
+    KnowledgeIngestResponse,
+    KnowledgeListResponse,
+    KnowledgeTextRequest,
+    SessionState,
+)
 from .question_router import (
     classify_question,
     extract_recent_question,
@@ -11,6 +18,7 @@ from .question_router import (
     is_question_like,
     normalize,
 )
+from .rag import ingest_text, list_knowledge, retrieve_context
 from .transcribe import transcribe_audio
 
 
@@ -60,7 +68,8 @@ async def process_text(session_id: str, text: str, force: bool, mode: str) -> An
 
     question_type = classify_question(question)
     try:
-        answer = await generate_answer(question, question_type, mode, settings)
+        context = await retrieve_context(question, settings)
+        answer = await generate_answer(question, question_type, mode, settings, context)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -99,6 +108,21 @@ async def audio_chunk(
 @app.post("/api/answer", response_model=AnswerResponse)
 async def answer(request: AnswerRequest) -> AnswerResponse:
     return await process_text(request.session_id, request.text, request.force, request.mode)
+
+
+@app.post("/api/knowledge/text", response_model=KnowledgeIngestResponse)
+async def add_knowledge(request: KnowledgeTextRequest) -> KnowledgeIngestResponse:
+    try:
+        chunks = await ingest_text(request.title, request.text, request.source_type, settings)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return KnowledgeIngestResponse(status="ok", chunks=chunks)
+
+
+@app.get("/api/knowledge", response_model=KnowledgeListResponse)
+async def knowledge_items() -> KnowledgeListResponse:
+    items = await list_knowledge(settings)
+    return KnowledgeListResponse(items=items)
 
 
 @app.post("/api/session/{session_id}/reset")

@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:7b-instruct"
 
+    rag_enabled: bool = True
+    qdrant_url: str = "http://qdrant:6333"
+    qdrant_collection: str = "interview_knowledge"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    rag_top_k: int = 4
+
     answer_max_tokens: int = 650
     auto_pause_seconds: int = 15
 

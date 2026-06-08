@@ -7,7 +7,12 @@ Do not mention that you are an AI. Avoid long essays. Prefer direct bullets.
 If the question is ambiguous, give a practical answer with assumptions."""
 
 
-def build_prompt(question: str, question_type: QuestionType, mode: str = "normal") -> str:
+def build_prompt(
+    question: str,
+    question_type: QuestionType,
+    mode: str = "normal",
+    context: str | None = None,
+) -> str:
     length_instruction = {
         "short": "Keep the answer very short: 3-5 bullets max.",
         "regenerate": "Provide an alternative answer with a different wording.",
@@ -42,6 +47,11 @@ Interview-ready explanation:""",
 
 Question type: {question_type.value}
 {length_instruction}
+
+Candidate context from resume/projects:
+{context or "No candidate-specific context retrieved."}
+
+Use candidate context only when relevant. Do not invent experience or claim work not present in the context.
 
 Required format:
 {formats[question_type]}

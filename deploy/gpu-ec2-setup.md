@@ -96,6 +96,14 @@ curl -X POST http://localhost/api/answer \
   -d '{"session_id":"test","text":"What is AWS VPC?","force":true}'
 ```
 
+Warm RAG embeddings:
+
+```bash
+curl -X POST http://localhost/api/knowledge/text \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Warmup","source_type":"profile","text":"AIOps platform, AWS, Python, automation, incident response, observability."}'
+```
+
 ## 4. HTTPS
 
 Phone microphone needs HTTPS. For the free `sslip.io` path:
