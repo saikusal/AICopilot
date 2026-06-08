@@ -138,27 +138,6 @@ h2 {
   margin-bottom: 12px;
 }
 
-.modeToggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 0 0 12px;
-}
-
-.modeToggle button {
-  min-height: 38px;
-  border-radius: 8px;
-  background: #22282e;
-  color: #aab6c2;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.modeToggle button.active {
-  background: #d7e0e8;
-  color: #101418;
-}
-
 .panel {
   border: 1px solid #2a3239;
   border-radius: 8px;
