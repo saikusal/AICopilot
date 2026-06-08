@@ -44,8 +44,16 @@ def get_session(session_id: str) -> SessionState:
     return sessions[session_id]
 
 
-async def process_text(session_id: str, text: str, force: bool, mode: str) -> AnswerResponse:
+async def process_text(
+    session_id: str,
+    text: str,
+    force: bool,
+    mode: str,
+    language: str | None = None,
+) -> AnswerResponse:
     state = get_session(session_id)
+    if language:
+        state.language = language
     segment = normalize(text)
     if segment:
         state.transcript = normalize(f"{state.transcript} {segment}")
@@ -69,7 +77,14 @@ async def process_text(session_id: str, text: str, force: bool, mode: str) -> An
     question_type = classify_question(question)
     try:
         context = await retrieve_context(question, settings)
-        answer = await generate_answer(question, question_type, mode, settings, context)
+        answer = await generate_answer(
+            question,
+            question_type,
+            mode,
+            settings,
+            context,
+            state.language,
+        )
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -96,18 +111,25 @@ async def audio_chunk(
     mode: str = Form(default="normal"),
     force: bool = Form(default=False),
     audio: UploadFile = File(...),
+    language: str | None = Form(default=None),
 ) -> AnswerResponse:
     audio_bytes = await audio.read()
     try:
         transcript = await transcribe_audio(audio_bytes, audio.content_type or "audio/webm", settings)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return await process_text(session_id, transcript, force, mode)
+    return await process_text(session_id, transcript, force, mode, language)
 
 
 @app.post("/api/answer", response_model=AnswerResponse)
 async def answer(request: AnswerRequest) -> AnswerResponse:
-    return await process_text(request.session_id, request.text, request.force, request.mode)
+    return await process_text(
+        request.session_id,
+        request.text,
+        request.force,
+        request.mode,
+        request.language,
+    )
 
 
 @app.post("/api/knowledge/text", response_model=KnowledgeIngestResponse)

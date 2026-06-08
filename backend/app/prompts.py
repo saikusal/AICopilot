@@ -12,6 +12,7 @@ def build_prompt(
     question_type: QuestionType,
     mode: str = "normal",
     context: str | None = None,
+    language: str = "Python",
 ) -> str:
     length_instruction = {
         "short": "Keep the answer very short: 3-5 bullets max.",
@@ -19,9 +20,9 @@ def build_prompt(
     }.get(mode, "Keep the answer compact but complete.")
 
     formats = {
-        QuestionType.coding: """Return:
+        QuestionType.coding: f"""Return:
 Approach:
-Code: use Python unless the question asks otherwise
+Code: use {language} unless the question explicitly asks otherwise
 Complexity:
 Edge cases:""",
         QuestionType.aws: """Return:
@@ -46,6 +47,7 @@ Interview-ready explanation:""",
     return f"""{BASE_SYSTEM}
 
 Question type: {question_type.value}
+Default coding language: {language}
 {length_instruction}
 
 Candidate context from resume/projects:

@@ -23,6 +23,8 @@ import "./styles.css";
 
 type Status = "idle" | "listening" | "paused" | "processing" | "error";
 
+const LANGUAGES = ["Python", "Java", "JavaScript", "TypeScript", "Go", "C++", "SQL"];
+
 function getSessionId(): string {
   const existing = localStorage.getItem("interview-copilot-session");
   if (existing) return existing;
@@ -39,6 +41,7 @@ function App() {
   const chunksRef = useRef<Blob[]>([]);
 
   const [status, setStatus] = useState<Status>("idle");
+  const [language, setLanguage] = useState(() => localStorage.getItem("interview-copilot-language") || "Python");
   const [transcript, setTranscript] = useState("");
   const [question, setQuestion] = useState("");
   const [questionType, setQuestionType] = useState("");
@@ -108,7 +111,7 @@ function App() {
         setStatus("processing");
         setMessage("Processing question...");
         try {
-          const data = await sendAudioChunk(sessionId, audio, "normal", true);
+          const data = await sendAudioChunk(sessionId, audio, "normal", true, language);
           applyResponse(data);
           setStatus(data.should_pause ? "paused" : "idle");
         } catch (err) {
@@ -158,7 +161,7 @@ function App() {
     setError("");
     try {
       const text = mode === "normal" ? manualText : question;
-      const data = await sendText(sessionId, text, mode, true);
+      const data = await sendText(sessionId, text, mode, true, language);
       applyResponse(data);
       setManualText("");
       setStatus("paused");
@@ -205,6 +208,11 @@ function App() {
     }
   }
 
+  function updateLanguage(nextLanguage: string) {
+    setLanguage(nextLanguage);
+    localStorage.setItem("interview-copilot-language", nextLanguage);
+  }
+
   const statusLabel = status === "processing" ? "processing" : status;
 
   return (
@@ -237,6 +245,20 @@ function App() {
         <button className="iconButton" title="Clear session" onClick={clearAll}>
           <Eraser size={18} />
         </button>
+      </section>
+
+      <section className="languageBar">
+        <label htmlFor="language">Code language</label>
+        <select
+          id="language"
+          value={language}
+          disabled={status === "listening" || status === "processing"}
+          onChange={(event) => updateLanguage(event.target.value)}
+        >
+          {LANGUAGES.map((item) => (
+            <option key={item} value={item}>{item}</option>
+          ))}
+        </select>
       </section>
 
       <p className="helperText">{error || message}</p>

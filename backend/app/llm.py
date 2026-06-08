@@ -10,9 +10,10 @@ async def generate_answer(
     mode: str,
     settings: Settings,
     context: str | None = None,
+    language: str = "Python",
 ) -> str:
     provider = settings.llm_provider.lower().strip()
-    prompt = build_prompt(question, question_type, mode, context)
+    prompt = build_prompt(question, question_type, mode, context, language)
     if provider == "ollama":
         return await _ollama(prompt, settings)
     if provider == "anthropic":

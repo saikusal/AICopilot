@@ -14,12 +14,14 @@ export async function sendAudioChunk(
   sessionId: string,
   blob: Blob,
   mode = "normal",
-  force = false
+  force = false,
+  language = "Python"
 ): Promise<CopilotResponse> {
   const form = new FormData();
   form.append("session_id", sessionId);
   form.append("mode", mode);
   form.append("force", String(force));
+  form.append("language", language);
   form.append("audio", blob, "chunk.webm");
 
   const response = await fetch(`${API_BASE}/api/audio-chunk`, {
@@ -36,12 +38,13 @@ export async function sendText(
   sessionId: string,
   text: string,
   mode = "normal",
-  force = true
+  force = true,
+  language = "Python"
 ): Promise<CopilotResponse> {
   const response = await fetch(`${API_BASE}/api/answer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, text, mode, force })
+    body: JSON.stringify({ session_id: sessionId, text, mode, force, language })
   });
   if (!response.ok) {
     throw new Error(await response.text());

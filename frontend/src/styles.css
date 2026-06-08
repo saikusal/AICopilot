@@ -138,6 +138,30 @@ h2 {
   margin-bottom: 12px;
 }
 
+.languageBar {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.languageBar label {
+  color: #aab6c2;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.languageBar select {
+  min-height: 38px;
+  border: 1px solid #2a3239;
+  border-radius: 8px;
+  background: #151a1f;
+  color: #eef2f6;
+  padding: 0 10px;
+  outline: none;
+}
+
 .panel {
   border: 1px solid #2a3239;
   border-radius: 8px;

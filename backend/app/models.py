@@ -17,6 +17,7 @@ class AnswerRequest(BaseModel):
     text: str
     force: bool = False
     mode: str = "normal"
+    language: str | None = None
 
 
 class AnswerResponse(BaseModel):
@@ -33,6 +34,7 @@ class SessionState(BaseModel):
     transcript: str = ""
     last_question: str | None = None
     last_answer: str | None = None
+    language: str = "Python"
 
 
 class KnowledgeTextRequest(BaseModel):
