@@ -1,0 +1,267 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0f1317;
+  color: #f3f6f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #0f1317;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.appShell {
+  width: min(100%, 560px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) 16px 88px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #9aa7b2;
+  font-size: 0.78rem;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.55rem;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+
+.statusPill {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #252b31;
+  color: #d9e1e7;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+
+.statusPill.listening {
+  background: #123628;
+  color: #86efac;
+}
+
+.statusPill.processing {
+  background: #3a3216;
+  color: #fde68a;
+}
+
+.statusPill.error {
+  background: #411d24;
+  color: #fda4af;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 48px 48px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.primaryButton,
+.iconButton,
+.manualBox button,
+.miniActions button,
+.bottomNav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.primaryButton {
+  min-height: 48px;
+  border-radius: 8px;
+  background: #18a058;
+  color: #06110b;
+  font-weight: 750;
+}
+
+.iconButton {
+  min-height: 48px;
+  border-radius: 8px;
+  background: #22282e;
+  color: #f3f6f8;
+}
+
+.helperText {
+  min-height: 38px;
+  color: #b4c0ca;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+
+.panel {
+  border: 1px solid #2a3239;
+  border-radius: 8px;
+  background: #151a1f;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.panelHeader span {
+  color: #93c5fd;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+
+.questionText,
+.transcriptText,
+.answerText,
+.emptyText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.42;
+}
+
+.questionText {
+  font-size: 1.02rem;
+  color: #f8fafc;
+}
+
+.transcriptText {
+  color: #cbd5df;
+  font-size: 0.92rem;
+}
+
+.answerPanel {
+  border-color: #31533d;
+  background: #121c17;
+}
+
+.answerText {
+  margin: 0;
+  color: #eefaf1;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.emptyText {
+  color: #798693;
+  font-size: 0.92rem;
+}
+
+.miniActions {
+  display: flex;
+  gap: 8px;
+}
+
+.miniActions button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #233228;
+  color: #d1fae5;
+}
+
+.manualBox {
+  display: grid;
+  grid-template-columns: 1fr 76px;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.manualBox textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #2a3239;
+  border-radius: 8px;
+  background: #11161b;
+  color: #eef2f6;
+  padding: 12px;
+  outline: none;
+}
+
+.manualBox textarea:focus {
+  border-color: #4f8cff;
+}
+
+.manualBox button {
+  border-radius: 8px;
+  background: #2f73ff;
+  color: white;
+  font-weight: 700;
+}
+
+.bottomNav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(100%, 560px);
+  padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  border-top: 1px solid #252d34;
+  background: rgba(15, 19, 23, 0.96);
+  backdrop-filter: blur(14px);
+}
+
+.bottomNav button {
+  min-height: 42px;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.bottomNav button.active {
+  background: #22282e;
+  color: #f8fafc;
+}
