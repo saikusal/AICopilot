@@ -28,6 +28,8 @@ function App() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const pauseTimerRef = useRef<number | null>(null);
+  const chunkTimerRef = useRef<number | null>(null);
+  const listeningRef = useRef(false);
 
   const [status, setStatus] = useState<Status>("idle");
   const [transcript, setTranscript] = useState("");
@@ -66,36 +68,62 @@ function App() {
         }
       });
       streamRef.current = stream;
+      listeningRef.current = true;
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : "audio/webm";
-      const recorder = new MediaRecorder(stream, { mimeType });
-      recorderRef.current = recorder;
-
-      recorder.ondataavailable = async (event) => {
-        if (!event.data.size || recorderRef.current?.state !== "recording") return;
-        setStatus("processing");
-        try {
-          const data = await sendAudioChunk(sessionId, event.data);
-          applyResponse(data);
-          if (!data.should_pause) setStatus("listening");
-        } catch (err) {
-          setStatus("error");
-          setError(err instanceof Error ? err.message : "Audio upload failed");
-        }
-      };
-
-      recorder.start(5000);
       setStatus("listening");
       setMessage("Listening. It will send audio every 5 seconds.");
+      startRecordingChunk(stream, mimeType);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Microphone permission failed");
     }
   }
 
+  function startRecordingChunk(stream: MediaStream, mimeType: string) {
+    if (!listeningRef.current) return;
+
+    const chunks: Blob[] = [];
+    const recorder = new MediaRecorder(stream, { mimeType });
+    recorderRef.current = recorder;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) chunks.push(event.data);
+    };
+
+    recorder.onstop = async () => {
+      if (!listeningRef.current || chunks.length === 0) return;
+
+      const audio = new Blob(chunks, { type: mimeType });
+      setStatus("processing");
+      try {
+        const data = await sendAudioChunk(sessionId, audio);
+        applyResponse(data);
+        if (!data.should_pause && listeningRef.current) {
+          setStatus("listening");
+          startRecordingChunk(stream, mimeType);
+        }
+      } catch (err) {
+        if (!listeningRef.current) return;
+        setStatus("error");
+        setError(err instanceof Error ? err.message : "Audio upload failed");
+      }
+    };
+
+    recorder.start();
+    chunkTimerRef.current = window.setTimeout(() => {
+      if (recorder.state === "recording") recorder.stop();
+    }, 5000);
+  }
+
   function stopListening(nextStatus: Status = "paused") {
     clearPauseTimer();
+    listeningRef.current = false;
+    if (chunkTimerRef.current) {
+      window.clearTimeout(chunkTimerRef.current);
+      chunkTimerRef.current = null;
+    }
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
     }

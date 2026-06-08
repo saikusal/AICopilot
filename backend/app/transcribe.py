@@ -65,12 +65,17 @@ def _transcribe_with_faster_whisper(audio: bytes, settings: Settings) -> str:
     try:
         with os.fdopen(fd, "wb") as handle:
             handle.write(audio)
-        segments, _info = _whisper_model.transcribe(
-            path,
-            language="en",
-            vad_filter=True,
-            beam_size=1,
-        )
+        try:
+            segments, _info = _whisper_model.transcribe(
+                path,
+                language="en",
+                vad_filter=True,
+                beam_size=1,
+            )
+        except RuntimeError as exc:
+            if "Invalid data found when processing input" in str(exc):
+                return ""
+            raise
         return " ".join(segment.text.strip() for segment in segments if segment.text.strip()).strip()
     finally:
         try:
