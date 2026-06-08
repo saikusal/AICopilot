@@ -6,7 +6,13 @@ QUESTION_STARTERS = (
     "what", "why", "how", "when", "where", "which", "who",
     "can you", "could you", "would you", "do you", "did you",
     "explain", "describe", "tell me", "walk me through", "design",
-    "implement", "write", "solve", "difference between",
+    "implement", "write", "solve", "difference between", "need",
+    "give", "create", "build", "find",
+)
+
+TASK_STARTERS = (
+    "need", "give", "create", "build", "find", "write", "implement",
+    "solve", "design", "explain", "describe", "tell", "show",
 )
 
 CODING_HINTS = (
@@ -54,8 +60,23 @@ def is_question_like(text: str) -> bool:
         phrase in lowered for phrase in (
             "difference between", "how would you", "what happens if",
             "can you explain", "could you explain", "walk me through",
+            "need python code", "need code", "give code", "write code",
+            "find duplicates", "reverse a string", "check palindrome",
+            "design url shortener",
         )
     )
+
+
+def is_interview_task(text: str) -> bool:
+    lowered = normalize(text).lower()
+    if is_question_like(lowered):
+        return True
+    if any(lowered.startswith(prefix) for prefix in TASK_STARTERS):
+        return any(
+            hint in lowered
+            for hint in CODING_HINTS + AWS_HINTS + DESIGN_HINTS + HR_HINTS + PROJECT_HINTS
+        )
+    return False
 
 
 def is_complete_enough(text: str) -> bool:
@@ -96,12 +117,12 @@ def extract_recent_question(transcript: str) -> str | None:
         return None
 
     chunks = re.split(r"(?<=[?.!])\s+", text)
-    candidates = [chunk for chunk in chunks[-4:] if is_question_like(chunk)]
+    candidates = [chunk for chunk in chunks[-4:] if is_interview_task(chunk)]
     if candidates:
         return normalize(candidates[-1])
 
     words = text.split()
     tail = " ".join(words[-50:])
-    if is_question_like(tail):
+    if is_interview_task(tail):
         return normalize(tail)
     return None
