@@ -98,7 +98,13 @@ curl -X POST http://localhost/api/answer \
 
 ## 4. HTTPS
 
-Phone microphone needs HTTPS. Point a domain to the EC2 public IP, then use Certbot or replace `nginx/default.conf` using `nginx/https.conf.example`.
+Phone microphone needs HTTPS. For the free `sslip.io` path:
+
+```bash
+bash scripts/setup_sslip_https.sh
+```
+
+The script detects the EC2 public IP, requests a Let's Encrypt certificate, switches Nginx to HTTPS, and prints the phone URL.
 
 ## Latency Notes
 

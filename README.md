@@ -127,6 +127,20 @@ bash scripts/setup_gpu_server.sh
 
 If the script installs the NVIDIA driver, reboot once and rerun the same script.
 
+## HTTPS With sslip.io
+
+Phone microphone access needs HTTPS. On EC2, after the app is running and ports `80`/`443` are open:
+
+```bash
+bash scripts/setup_sslip_https.sh
+```
+
+The script detects your public IP and creates a free `sslip.io` hostname, for example:
+
+```text
+https://13-201-10-25.sslip.io
+```
+
 ## Usage
 
 1. Open the site on your phone.
