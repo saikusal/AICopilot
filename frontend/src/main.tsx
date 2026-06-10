@@ -13,7 +13,9 @@ import {
 import {
   CopilotResponse,
   KnowledgeItem,
+  SkillProfile,
   addKnowledge,
+  getProfile,
   listKnowledge,
   resetSession,
   sendAudioChunk,
@@ -23,7 +25,7 @@ import "./styles.css";
 
 type Status = "idle" | "listening" | "paused" | "processing" | "error";
 
-const LANGUAGES = ["Python", "Java", "JavaScript", "TypeScript", "Go", "C++", "SQL"];
+const LANGUAGES = ["Auto", "Python", "Java", "JavaScript", "TypeScript", "Go", "C++", "SQL"];
 
 function getSessionId(): string {
   const existing = localStorage.getItem("interview-copilot-session");
@@ -41,7 +43,7 @@ function App() {
   const chunksRef = useRef<Blob[]>([]);
 
   const [status, setStatus] = useState<Status>("idle");
-  const [language, setLanguage] = useState(() => localStorage.getItem("interview-copilot-language") || "Python");
+  const [language, setLanguage] = useState(() => localStorage.getItem("interview-copilot-language") || "Auto");
   const [transcript, setTranscript] = useState("");
   const [question, setQuestion] = useState("");
   const [questionType, setQuestionType] = useState("");
@@ -53,9 +55,11 @@ function App() {
   const [knowledgeText, setKnowledgeText] = useState("");
   const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItem[]>([]);
   const [knowledgeMessage, setKnowledgeMessage] = useState("");
+  const [profile, setProfile] = useState<SkillProfile | null>(null);
 
   useEffect(() => {
     loadKnowledge();
+    getProfile().then(setProfile).catch(() => setProfile(null));
     return () => stopListening();
   }, []);
 
@@ -199,9 +203,16 @@ function App() {
     }
     setKnowledgeMessage("Indexing knowledge...");
     try {
-      const result = await addKnowledge(knowledgeTitle || "Resume and projects", knowledgeText, "profile");
+      const result = await addKnowledge(knowledgeTitle || "Resume and projects", knowledgeText, "resume");
       setKnowledgeText("");
-      setKnowledgeMessage(`Saved ${result.chunks} chunks for RAG.`);
+      if (result.profile) {
+        setProfile(result.profile);
+        setKnowledgeMessage(
+          `Saved ${result.chunks} chunks. Detected ${result.profile.primary_language} as your strongest language.`
+        );
+      } else {
+        setKnowledgeMessage(`Saved ${result.chunks} chunks for RAG.`);
+      }
       await loadKnowledge();
     } catch (err) {
       setKnowledgeMessage(err instanceof Error ? err.message : "Knowledge save failed");
@@ -259,6 +270,11 @@ function App() {
             <option key={item} value={item}>{item}</option>
           ))}
         </select>
+        {language === "Auto" && (
+          <span className="languageHint">
+            {profile ? `Using ${profile.primary_language} from your resume` : "Add your resume below to set this"}
+          </span>
+        )}
       </section>
 
       <p className="helperText">{error || message}</p>
@@ -329,6 +345,18 @@ function App() {
         />
         <button onClick={saveKnowledge}>Save to RAG</button>
         {knowledgeMessage && <p className="knowledgeMessage">{knowledgeMessage}</p>}
+        {profile && (
+          <div className="profileCard">
+            <p><strong>Detected profile</strong></p>
+            <p>Primary: {profile.primary_language} · {profile.seniority}</p>
+            {profile.secondary_languages.length > 0 && (
+              <p>Also: {profile.secondary_languages.join(", ")}</p>
+            )}
+            {profile.frameworks.length > 0 && (
+              <p>Frameworks: {profile.frameworks.join(", ")}</p>
+            )}
+          </div>
+        )}
         {knowledgeItems.length > 0 && (
           <div className="knowledgeList">
             {knowledgeItems.slice(0, 3).map((item) => (

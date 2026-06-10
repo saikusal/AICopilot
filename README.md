@@ -5,12 +5,12 @@ Mobile-first web MVP for a phone-based interview copilot.
 ## What Works In This MVP
 
 - Phone microphone capture from the browser
-- 5-second audio chunks
+- Hold-to-listen capture: hold the button while the interviewer speaks, release to send the clip
 - Deepgram transcription
 - Question detection and classification
 - OpenAI or Anthropic answer generation
-- Manual listen/pause to avoid capturing your own spoken answer
-- Auto-pause after an answer appears
+- Auto-pause after an answer appears, so your spoken response is not captured
+- Resume-driven skill profile: the coding language is chosen from your resume, not a fixed default
 - Manual text test box
 - Docker Compose deployment for a basic EC2 instance
 - Local no-API mode with Faster Whisper and Ollama/Qwen on a GPU EC2 instance
@@ -129,6 +129,40 @@ curl -X POST http://localhost/api/knowledge/text \
   -d '{"title":"Resume","source_type":"resume","text":"Paste resume text here"}'
 ```
 
+## Resume-Driven Language
+
+When you save a resume in the `Knowledge` panel (or POST with `source_type` set to
+`resume` or `profile`), the backend runs one LLM pass to extract a skill profile:
+
+```json
+{
+  "primary_language": "Python",
+  "secondary_languages": ["SQL", "Bash"],
+  "frameworks": ["Django", "FastAPI"],
+  "domains": ["AIOps", "AWS"],
+  "seniority": "senior"
+}
+```
+
+The profile is stored in a Qdrant `interview_profile` collection and injected into every
+coding prompt. With the language selector set to `Auto`, a question like "write code to
+reverse a string" is answered in your strongest language, in a style matching your
+seniority and frameworks. Picking a specific language in the selector overrides the profile,
+and a question that names a language always wins.
+
+Inspect or correct the detected profile:
+
+```bash
+curl http://localhost/api/profile
+
+curl -X PUT http://localhost/api/profile \
+  -H 'Content-Type: application/json' \
+  -d '{"primary_language":"Python","secondary_languages":["Go"],"frameworks":["FastAPI"],"domains":["AIOps"],"seniority":"senior"}'
+```
+
+Profile extraction is best-effort: if it fails, the resume is still ingested for RAG and the
+selector default is used.
+
 Full GPU EC2 instructions:
 
 ```text
@@ -162,8 +196,8 @@ https://13-201-10-25.sslip.io
 ## Usage
 
 1. Open the site on your phone.
-2. Tap `Listen` when the interviewer starts asking.
-3. The app sends audio every 5 seconds.
-4. When an answer appears, the mic pauses automatically.
+2. Paste your resume into the `Knowledge` panel and save, so the profile is set.
+3. Hold `Listen` while the interviewer asks the question.
+4. Release to send the clip; the answer appears and the mic auto-pauses.
 5. Speak your answer verbally.
-6. Tap `Resume` for the next question.
+6. Hold `Listen` again for the next question.

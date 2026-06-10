@@ -7,12 +7,33 @@ Do not mention that you are an AI. Avoid long essays. Prefer direct bullets.
 If the question is ambiguous, give a practical answer with assumptions."""
 
 
+def _profile_block(profile) -> str:
+    if not profile:
+        return ""
+    parts = [f"Strongest language: {profile.primary_language}."]
+    if profile.secondary_languages:
+        parts.append(f"Also knows: {', '.join(profile.secondary_languages)}.")
+    if profile.frameworks:
+        parts.append(f"Familiar frameworks/tools: {', '.join(profile.frameworks)}.")
+    if profile.domains:
+        parts.append(f"Domains: {', '.join(profile.domains)}.")
+    if profile.seniority:
+        parts.append(f"Seniority: {profile.seniority}.")
+    return (
+        "Candidate skill profile (derived from their resume):\n"
+        + " ".join(parts)
+        + f"\nWrite code idiomatic to a {profile.seniority} {profile.primary_language} "
+        "engineer, using their frameworks when relevant."
+    )
+
+
 def build_prompt(
     question: str,
     question_type: QuestionType,
     mode: str = "normal",
     context: str | None = None,
     language: str = "Python",
+    profile=None,
 ) -> str:
     length_instruction = {
         "short": "Keep the answer very short: 3-5 bullets max.",
@@ -44,11 +65,15 @@ Interview-ready explanation:""",
         QuestionType.general: """Return a direct technical answer with a simple example if useful.""",
     }
 
+    profile_block = _profile_block(profile)
+
     return f"""{BASE_SYSTEM}
 
 Question type: {question_type.value}
 Default coding language: {language}
 {length_instruction}
+
+{profile_block}
 
 Candidate context from resume/projects:
 {context or "No candidate-specific context retrieved."}

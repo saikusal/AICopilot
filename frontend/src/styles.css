@@ -162,6 +162,12 @@ h2 {
   outline: none;
 }
 
+.languageHint {
+  grid-column: 1 / -1;
+  color: #7fd7a4;
+  font-size: 0.78rem;
+}
+
 .panel {
   border: 1px solid #2a3239;
   border-radius: 8px;
@@ -317,6 +323,25 @@ h2 {
 
 .knowledgeList strong {
   color: #eef2f6;
+}
+
+.profileCard {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #2a3239;
+  border-radius: 8px;
+  background: #11161a;
+}
+
+.profileCard p {
+  color: #aeb9c4;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.profileCard strong {
+  color: #7fd7a4;
 }
 
 .bottomNav {

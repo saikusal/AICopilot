@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     rag_enabled: bool = True
     qdrant_url: str = "http://qdrant:6333"
     qdrant_collection: str = "interview_knowledge"
+    profile_collection: str = "interview_profile"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     rag_top_k: int = 4
 

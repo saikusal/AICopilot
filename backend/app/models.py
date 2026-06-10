@@ -50,9 +50,18 @@ class KnowledgeItem(BaseModel):
     preview: str
 
 
+class SkillProfile(BaseModel):
+    primary_language: str = "Python"
+    secondary_languages: list[str] = Field(default_factory=list)
+    frameworks: list[str] = Field(default_factory=list)
+    domains: list[str] = Field(default_factory=list)
+    seniority: str = "mid"
+
+
 class KnowledgeIngestResponse(BaseModel):
     status: str
     chunks: int
+    profile: SkillProfile | None = None
 
 
 class KnowledgeListResponse(BaseModel):

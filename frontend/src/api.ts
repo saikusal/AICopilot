@@ -63,7 +63,19 @@ export type KnowledgeItem = {
   preview: string;
 };
 
-export async function addKnowledge(title: string, text: string, sourceType = "profile"): Promise<{ chunks: number }> {
+export type SkillProfile = {
+  primary_language: string;
+  secondary_languages: string[];
+  frameworks: string[];
+  domains: string[];
+  seniority: string;
+};
+
+export async function addKnowledge(
+  title: string,
+  text: string,
+  sourceType = "profile"
+): Promise<{ chunks: number; profile?: SkillProfile | null }> {
   const response = await fetch(`${API_BASE}/api/knowledge/text`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -71,6 +83,14 @@ export async function addKnowledge(title: string, text: string, sourceType = "pr
   });
   if (!response.ok) {
     throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export async function getProfile(): Promise<SkillProfile | null> {
+  const response = await fetch(`${API_BASE}/api/profile`);
+  if (!response.ok) {
+    return null;
   }
   return response.json();
 }

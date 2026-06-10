@@ -4,6 +4,16 @@ from .models import QuestionType
 from .prompts import build_prompt
 
 
+async def generate_text(prompt: str, settings: Settings) -> str:
+    """Run a raw prompt through the configured LLM provider."""
+    provider = settings.llm_provider.lower().strip()
+    if provider == "ollama":
+        return await _ollama(prompt, settings)
+    if provider == "anthropic":
+        return await _anthropic(prompt, settings)
+    return await _openai(prompt, settings)
+
+
 async def generate_answer(
     question: str,
     question_type: QuestionType,
@@ -11,14 +21,10 @@ async def generate_answer(
     settings: Settings,
     context: str | None = None,
     language: str = "Python",
+    profile=None,
 ) -> str:
-    provider = settings.llm_provider.lower().strip()
-    prompt = build_prompt(question, question_type, mode, context, language)
-    if provider == "ollama":
-        return await _ollama(prompt, settings)
-    if provider == "anthropic":
-        return await _anthropic(prompt, settings)
-    return await _openai(prompt, settings)
+    prompt = build_prompt(question, question_type, mode, context, language, profile)
+    return await generate_text(prompt, settings)
 
 
 async def _openai(prompt: str, settings: Settings) -> str:

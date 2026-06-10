@@ -10,7 +10,9 @@ from .models import (
     KnowledgeListResponse,
     KnowledgeTextRequest,
     SessionState,
+    SkillProfile,
 )
+from .profile import extract_profile, load_profile, save_profile
 from .question_router import (
     classify_question,
     extract_recent_question,
@@ -52,8 +54,12 @@ async def process_text(
     language: str | None = None,
 ) -> AnswerResponse:
     state = get_session(session_id)
-    if language:
-        state.language = language
+    profile = await load_profile(settings)
+    explicit = language.strip() if language and language.strip().lower() != "auto" else ""
+    if explicit:
+        state.language = explicit
+    elif profile:
+        state.language = profile.primary_language
     segment = normalize(text)
     if segment:
         state.transcript = normalize(f"{state.transcript} {segment}")
@@ -84,6 +90,7 @@ async def process_text(
             settings,
             context,
             state.language,
+            profile,
         )
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -138,7 +145,32 @@ async def add_knowledge(request: KnowledgeTextRequest) -> KnowledgeIngestRespons
         chunks = await ingest_text(request.title, request.text, request.source_type, settings)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return KnowledgeIngestResponse(status="ok", chunks=chunks)
+
+    # Derive and persist the skill profile from resume/profile uploads.
+    # Best-effort: a failed extraction must not fail the ingest.
+    profile: SkillProfile | None = None
+    if request.source_type.lower() in {"resume", "profile"}:
+        try:
+            profile = await extract_profile(request.text, settings)
+            await save_profile(profile, settings)
+        except Exception:
+            profile = None
+
+    return KnowledgeIngestResponse(status="ok", chunks=chunks, profile=profile)
+
+
+@app.get("/api/profile", response_model=SkillProfile | None)
+async def get_profile() -> SkillProfile | None:
+    return await load_profile(settings)
+
+
+@app.put("/api/profile", response_model=SkillProfile)
+async def put_profile(profile: SkillProfile) -> SkillProfile:
+    try:
+        await save_profile(profile, settings)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return profile
 
 
 @app.get("/api/knowledge", response_model=KnowledgeListResponse)
