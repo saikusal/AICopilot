@@ -87,6 +87,26 @@ export async function addKnowledge(
   return response.json();
 }
 
+export async function uploadKnowledgeFile(
+  file: File,
+  title = "",
+  sourceType = "resume"
+): Promise<{ chunks: number; profile?: SkillProfile | null }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("title", title);
+  form.append("source_type", sourceType);
+
+  const response = await fetch(`${API_BASE}/api/knowledge/file`, {
+    method: "POST",
+    body: form
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
 export async function getProfile(): Promise<SkillProfile | null> {
   const response = await fetch(`${API_BASE}/api/profile`);
   if (!response.ok) {

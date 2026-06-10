@@ -8,7 +8,8 @@ import {
   RefreshCcw,
   Send,
   Scissors,
-  Square
+  Square,
+  Upload
 } from "lucide-react";
 import {
   CopilotResponse,
@@ -19,7 +20,8 @@ import {
   listKnowledge,
   resetSession,
   sendAudioChunk,
-  sendText
+  sendText,
+  uploadKnowledgeFile
 } from "./api";
 import "./styles.css";
 
@@ -41,6 +43,7 @@ function App() {
   const streamRef = useRef<MediaStream | null>(null);
   const pauseTimerRef = useRef<number | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [status, setStatus] = useState<Status>("idle");
   const [language, setLanguage] = useState(() => localStorage.getItem("interview-copilot-language") || "Auto");
@@ -219,6 +222,27 @@ function App() {
     }
   }
 
+  async function uploadResume(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setKnowledgeMessage(`Reading ${file.name}...`);
+    try {
+      const result = await uploadKnowledgeFile(file, knowledgeTitle || file.name, "resume");
+      if (result.profile) {
+        setProfile(result.profile);
+        setKnowledgeMessage(
+          `Imported ${file.name} (${result.chunks} chunks). Detected ${result.profile.primary_language} as your strongest language.`
+        );
+      } else {
+        setKnowledgeMessage(`Imported ${file.name} (${result.chunks} chunks).`);
+      }
+      await loadKnowledge();
+    } catch (err) {
+      setKnowledgeMessage(err instanceof Error ? err.message : "Resume upload failed");
+    }
+  }
+
   function updateLanguage(nextLanguage: string) {
     setLanguage(nextLanguage);
     localStorage.setItem("interview-copilot-language", nextLanguage);
@@ -337,6 +361,17 @@ function App() {
           onChange={(event) => setKnowledgeTitle(event.target.value)}
           placeholder="Title"
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx,.txt,.md"
+          style={{ display: "none" }}
+          onChange={uploadResume}
+        />
+        <button className="uploadButton" onClick={() => fileInputRef.current?.click()}>
+          <Upload size={16} /> Upload resume (PDF, DOCX, TXT)
+        </button>
+        <p className="orDivider">or paste below</p>
         <textarea
           value={knowledgeText}
           onChange={(event) => setKnowledgeText(event.target.value)}

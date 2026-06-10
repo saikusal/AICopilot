@@ -302,6 +302,24 @@ h2 {
   font-weight: 750;
 }
 
+.knowledgePanel > button.uploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #1b2129;
+  color: #eef2f6;
+  border: 1px dashed #3a4654;
+  margin-bottom: 8px;
+}
+
+.orDivider {
+  text-align: center;
+  color: #6b7886;
+  font-size: 0.78rem;
+  margin: 2px 0 10px;
+}
+
 .knowledgeMessage {
   margin-top: 10px;
   color: #cbd5df;

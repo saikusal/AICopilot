@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
+from .extract import extract_resume_text
 from .llm import generate_answer
 from .models import (
     AnswerRequest,
@@ -139,24 +140,46 @@ async def answer(request: AnswerRequest) -> AnswerResponse:
     )
 
 
-@app.post("/api/knowledge/text", response_model=KnowledgeIngestResponse)
-async def add_knowledge(request: KnowledgeTextRequest) -> KnowledgeIngestResponse:
+async def _ingest_and_profile(title: str, text: str, source_type: str) -> KnowledgeIngestResponse:
     try:
-        chunks = await ingest_text(request.title, request.text, request.source_type, settings)
+        chunks = await ingest_text(title, text, source_type, settings)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     # Derive and persist the skill profile from resume/profile uploads.
     # Best-effort: a failed extraction must not fail the ingest.
     profile: SkillProfile | None = None
-    if request.source_type.lower() in {"resume", "profile"}:
+    if source_type.lower() in {"resume", "profile"}:
         try:
-            profile = await extract_profile(request.text, settings)
+            profile = await extract_profile(text, settings)
             await save_profile(profile, settings)
         except Exception:
             profile = None
 
     return KnowledgeIngestResponse(status="ok", chunks=chunks, profile=profile)
+
+
+@app.post("/api/knowledge/text", response_model=KnowledgeIngestResponse)
+async def add_knowledge(request: KnowledgeTextRequest) -> KnowledgeIngestResponse:
+    return await _ingest_and_profile(request.title, request.text, request.source_type)
+
+
+@app.post("/api/knowledge/file", response_model=KnowledgeIngestResponse)
+async def add_knowledge_file(
+    file: UploadFile = File(...),
+    title: str = Form(default=""),
+    source_type: str = Form(default="resume"),
+) -> KnowledgeIngestResponse:
+    data = await file.read()
+    try:
+        text = extract_resume_text(data, file.filename or "", file.content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="No text could be extracted from the file.")
+    return await _ingest_and_profile(title or (file.filename or "Resume"), text, source_type)
 
 
 @app.get("/api/profile", response_model=SkillProfile | None)
