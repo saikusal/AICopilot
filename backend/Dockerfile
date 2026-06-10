@@ -17,6 +17,11 @@ COPY requirements.txt .
 RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install -r requirements.txt
 
+# Pre-download the embedding model into the image so the first request
+# does not pay a multi-minute HuggingFace download at runtime.
+ARG EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+RUN python3 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('${EMBEDDING_MODEL}')"
+
 COPY app ./app
 
 EXPOSE 8000

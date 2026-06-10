@@ -21,8 +21,10 @@ from .question_router import (
     is_question_like,
     normalize,
 )
-from .rag import ingest_text, list_knowledge, retrieve_context
+from .rag import get_embedding_model, ingest_text, list_knowledge, retrieve_context
 from .transcribe import transcribe_audio
+
+import asyncio
 
 
 settings = get_settings()
@@ -39,6 +41,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def warm_models() -> None:
+    """Load the embedding model in the background so the first ingest is fast."""
+    if not settings.rag_enabled:
+        return
+
+    def _load() -> None:
+        try:
+            get_embedding_model(settings.embedding_model)
+        except Exception:
+            pass
+
+    asyncio.create_task(asyncio.to_thread(_load))
 
 
 def get_session(session_id: str) -> SessionState:
