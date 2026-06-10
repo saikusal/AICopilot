@@ -6,6 +6,20 @@ from .config import Settings
 _whisper_model = None
 
 
+def load_whisper_model(settings: Settings):
+    """Load and cache the faster-whisper model. Safe to call repeatedly."""
+    global _whisper_model
+    if _whisper_model is None:
+        from faster_whisper import WhisperModel
+
+        _whisper_model = WhisperModel(
+            settings.whisper_model,
+            device=settings.whisper_device,
+            compute_type=settings.whisper_compute_type,
+        )
+    return _whisper_model
+
+
 async def transcribe_audio(audio: bytes, content_type: str, settings: Settings) -> str:
     provider = settings.stt_provider.lower().strip()
     if provider in {"local", "local_whisper", "whisper", "faster_whisper"}:
@@ -47,18 +61,10 @@ async def _transcribe_with_deepgram(audio: bytes, content_type: str, settings: S
 
 
 def _transcribe_with_faster_whisper(audio: bytes, settings: Settings) -> str:
-    global _whisper_model
     try:
-        from faster_whisper import WhisperModel
+        model = load_whisper_model(settings)
     except ImportError as exc:
         raise RuntimeError("faster-whisper is not installed") from exc
-
-    if _whisper_model is None:
-        _whisper_model = WhisperModel(
-            settings.whisper_model,
-            device=settings.whisper_device,
-            compute_type=settings.whisper_compute_type,
-        )
 
     suffix = ".webm"
     fd, path = tempfile.mkstemp(suffix=suffix)
@@ -66,7 +72,7 @@ def _transcribe_with_faster_whisper(audio: bytes, settings: Settings) -> str:
         with os.fdopen(fd, "wb") as handle:
             handle.write(audio)
         try:
-            segments, _info = _whisper_model.transcribe(
+            segments, _info = model.transcribe(
                 path,
                 language="en",
                 vad_filter=True,

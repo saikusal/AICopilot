@@ -22,7 +22,7 @@ from .question_router import (
     normalize,
 )
 from .rag import get_embedding_model, ingest_text, list_knowledge, retrieve_context
-from .transcribe import transcribe_audio
+from .transcribe import load_whisper_model, transcribe_audio
 
 import asyncio
 
@@ -45,15 +45,23 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def warm_models() -> None:
-    """Load the embedding model in the background so the first ingest is fast."""
-    if not settings.rag_enabled:
-        return
+    """Pre-load heavy models in the background so the first request is fast.
 
+    Without this, the first ingest cold-loads the embedding model and the
+    first voice request cold-loads Whisper, each of which can exceed the
+    proxy timeout and 504.
+    """
     def _load() -> None:
-        try:
-            get_embedding_model(settings.embedding_model)
-        except Exception:
-            pass
+        if settings.rag_enabled:
+            try:
+                get_embedding_model(settings.embedding_model)
+            except Exception:
+                pass
+        if settings.stt_provider.lower().strip() in {"local", "local_whisper", "whisper", "faster_whisper"}:
+            try:
+                load_whisper_model(settings)
+            except Exception:
+                pass
 
     asyncio.create_task(asyncio.to_thread(_load))
 
